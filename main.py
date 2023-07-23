@@ -1,9 +1,7 @@
-import cv2
-import numpy as np
+from yolov5 import *
 from pathlib import Path
 from filterpy.kalman import KalmanFilter
 from scipy.optimize import linear_sum_assignment
-import yolov5
 
 
 def linear_assignment(cost_matrix):
@@ -216,21 +214,27 @@ class Sort(object):
 if __name__ == '__main__':
   mot_tracker = Sort(max_age=1, min_hits=3, iou_threshold=0.3) #create instance of the SORT tracker
   colours = np.random.rand(32, 3) * 255
-  model = yolov5.YOLOV5('./model/yolov5s.onnx')
+  net = cv2.dnn.readNet("./yolov5s.onnx")
   files = Path("./data").glob('*')
 
   for file in files:
     print(file)
     image = cv2.imread(str(file))
-    output, _ = model.inference(image)
-    outbox = yolov5.filter_box(output, 0.5, 0.5)
-    outbox = yolov5.scale_boxes(yolov5.input_shape, outbox, image.shape)
-    outbox = outbox[:, :5]
+    image_lb = letterbox(image)
+    blob = cv2.dnn.blobFromImage(image_lb, 1/255., size=(640,640), swapRB=True, crop=False)
+    net.setInput(blob)
+    pred = net.forward()
+    ids, confs, boxes = infer(pred)
+    outbox = []
+    for i in range(len(confs)):
+      boxes[i] = np.append(boxes[i], confs[i])
+      outbox.append(boxes[i])
+    outbox = np.array(outbox)
     outbox = outbox[np.lexsort(outbox[:,::-1].T)]
     trackers = mot_tracker.update(outbox)
 
     for d in trackers:
       d = d.astype(np.int32)
-      cv2.rectangle(image, (d[0], d[1]), (d[2], d[3]), colours[d[4]%32,:], 1)
-    cv2.imshow('sort', image)
+      cv2.rectangle(image_lb, (d[0], d[1]), (d[2], d[3]), colours[d[4]%32,:], 1)
+    cv2.imshow('sort', image_lb)
     cv2.waitKey(50)
