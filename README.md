@@ -1,5 +1,5 @@
 # sort-yolov5
-Multi target tracking sort+yolov5 implemented with python and C++.
+Multi target tracking yolov5+sort implemented with python and C++.
 
 You can run it with:
 ```shell
