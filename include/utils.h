@@ -15,6 +15,25 @@
 
 
 /**
+ * @brief LetterBox		LetterBox处理
+ * @param input_image	输入图像
+ * @param output_image	输出图像
+ * @param shape			输出尺寸
+ * @param color			填充颜色
+ */
+void LetterBox(cv::Mat& input_image, cv::Mat& output_image, cv::Size& shape = cv::Size(640, 640), cv::Scalar& color = cv::Scalar(114, 114, 114));
+
+
+/**
+ * @brief scale_boxes	缩放包围盒
+ * @param box			包围盒
+ * @param input_size	输入尺寸
+ * @param output_size	输出尺寸
+ */
+void scale_box(cv::Rect& box, cv::Size input_size, cv::Size output_size);
+
+
+/**
  * @brief draw_label 画检测框
  * @param input_image 输入图像
  * @param label 标签名称

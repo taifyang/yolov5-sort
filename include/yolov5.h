@@ -13,13 +13,7 @@
 #include <opencv2/opencv.hpp>
 
 
-const float INPUT_WIDTH = 640.0;			//输入网络图像宽度
-const float INPUT_HEIGHT = 640.0;			//输入网络图像高度
-const float SCORE_THRESHOLD = 0.5;			//得分阈值
-const float NMS_THRESHOLD = 0.5;			//nms阈值
-const float CONFIDENCE_THRESHOLD = 0.5;		//置信度阈值
-
-const std::vector<std::string> class_name = {
+const std::vector<std::string> class_names = {
 	"person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat", "traffic light",
 	"fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow",
 	"elephant", "bear", "zebra", "giraffe", "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee",
@@ -30,35 +24,80 @@ const std::vector<std::string> class_name = {
 	"microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors", "teddy bear",
 	"hair drier", "toothbrush" };			//类别名称
 
+const int input_width = 640;
 
-/**
- * @brief pre_process	预处理
- * @param input_image	输入图像
- * @param net			输入网络
- */
-void pre_process(cv::Mat& image, cv::Mat& blob);
+const int input_height = 640;
 
+const float score_threshold = 0.2;
 
-/**
- * @brief process	网络处理
- * @param blob		输入图像
- * @param net		输入网络
- * @param outputs	输入网络
- */
-void process(cv::Mat& blob, cv::dnn::Net& net, std::vector<cv::Mat>& outputs);
+const float nms_threshold = 0.5;
 
+const float confidence_threshold = 0.2;
 
-/**
- * @brief scale_boxes	缩放检测框
- * @param box			检测框
- * @param size			缩放尺寸
- */
-void scale_boxes(cv::Rect& box, cv::Size size);
+const int input_numel = 1 * 3 * input_width * input_height;
+
+const int num_classes = class_names.size();
+
+const int output_numprob = 5 + num_classes;
+
+const int output_numbox = 3 * (input_width / 8 * input_height / 8 + input_width / 16 * input_height / 16 + input_width / 32 * input_height / 32);
+
+const int output_numel = 1 * output_numprob * output_numbox;
 
 
-/**
- * @brief post_process		后处理
- * @param origin_image		原始图像
- * @param processed_image	处理后的图像
- */
-std::vector<cv::Rect> post_process(cv::Mat& origin_image, std::vector<cv::Mat>& processed_image);
+class YOLOv5
+{
+public:
+	/**
+	 * @brief YOLOv5		构造函数
+	 * @param model_path	模型路径
+	 */
+	YOLOv5(const std::string model_path);
+
+	/**
+	 * @brief infer			推理接口
+	 * @param model_path	图片路径
+	 */
+	std::vector<cv::Rect> infer(const cv::Mat image);
+
+private:
+	/**
+	 * @brief pre_process	预处理
+	 */
+	void pre_process();
+
+	/**
+	 * @brief process		网络推理
+	 */
+	void process();
+
+	/**
+	 * @brief pre_process	后处理
+	 */
+	void post_process();
+
+	/**
+	 * @brief m_net			cv::dnn::Net对象
+	 */
+	cv::dnn::Net m_net;
+
+	/**
+	 * @brief m_inputs		输入图像
+	 */
+	cv::Mat m_image;
+
+	/**
+	 * @brief m_inputs		输入tensor
+	 */
+	cv::Mat m_inputs;
+
+	/**
+	 * @brief m_outputs		输出tensor
+	 */
+	std::vector<cv::Mat> m_outputs;
+
+	/**
+	 * @brief m_boxes		输出的box
+	 */
+	std::vector<cv::Rect> m_boxes;
+};
